@@ -13,7 +13,7 @@ import org.json.simple.parser.JSONParser; // Imports the class for parsing JSON 
 import org.json.simple.parser.ParseException; // Imports the class for handling JSON parsing exceptions
 
 // Client class
-public class Client {
+public class W8Client {
 
     // IP address and port of the server
     private static String ip = "localhost"; // IP address of the server (local machine)
