@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/W3TutDemo/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/W4TutDemo/MultiThreadedServerClient/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/W4TutDemo/ThreadSync/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/W5TutDemo/SampleDictionaryClientUI/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/W5TutDemo/ThreadRunnableDemo/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/W7TutDemo/RMIDemo/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/W8TutDemo/SendingFile/src" isTestSource="false" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
