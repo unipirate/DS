@@ -16,7 +16,7 @@ import org.json.simple.parser.JSONParser; // Imports the class for parsing JSON 
 import org.json.simple.parser.ParseException; // Imports the class for handling JSON parsing exceptions
 
 // Server class
-public class Server {
+public class W8Server {
 
     // Defines the port number for the server
     private static int port = 3003;
