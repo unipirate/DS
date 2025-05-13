@@ -1,73 +1,129 @@
-package Server;
+package Server; /** WhiteboardServer.java — 白板服务器程序实现 */
+import Interface.*;
+import Utility.*;
 
-import Client.DrawCommand;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
+// ✅ WhiteboardServer.java
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.*;
 
-/**
- * WhiteboardServer：接受多个客户端连接，
- * 将某客户端发来的 DrawCommand 广播给其它所有客户端。
- */
-public class WhiteboardServer {
-    private final int port;
-    private final List<ObjectOutputStream> clients = Collections.synchronizedList(new ArrayList<>());
+public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardServerInterface {
+    private Map<String, WhiteboardClientInterface> clients;
+    private List<WhiteboardShape> shapes;
+    private List<String> chatHistory;
+    private String manager;
 
-    public WhiteboardServer(int port) {
-        this.port = port;
+    public WhiteboardServer() throws RemoteException {
+        clients = new HashMap<>();
+        shapes = new ArrayList<>();
+        chatHistory = new ArrayList<>();
+        manager = null;
     }
 
-    public void start() throws Exception {
-        ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("Server started on port " + port);
-        while (true) {
-            Socket sock = serverSocket.accept();
-            System.out.println("Client connected: " + sock.getRemoteSocketAddress());
-            ObjectOutputStream oos = new ObjectOutputStream(sock.getOutputStream());
-            ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
-            clients.add(oos);
-
-            // 为每个客户端启动一个处理线程
-            new Thread(() -> {
-                try {
-                    while (true) {
-                        Object obj = ois.readObject();
-                        if (obj instanceof DrawCommand) {
-                            broadcast((DrawCommand) obj, oos);
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("Client disconnected.");
-                } finally {
-                    clients.remove(oos);
-                }
-            }).start();
+    public synchronized BoardState joinBoard(String username, WhiteboardClientInterface client)
+            throws Exception {
+        if (clients.containsKey(username)) {
+            throw new Exception("用户名已存在");
         }
+
+        boolean isAdmin = false;
+        if (manager == null) {
+            manager = username;
+            isAdmin = true;
+        } else {
+            boolean accepted = clients.get(manager).confirmJoinRequest(username);
+            if (!accepted) throw new Exception("管理员拒绝了加入请求");
+        }
+
+        clients.put(username, client);
+        return new BoardState(shapes, new ArrayList<>(clients.keySet()), isAdmin, chatHistory);
     }
 
-    // 将 cmd 发给除了源 oos 外的所有客户端
-    private void broadcast(DrawCommand cmd, ObjectOutputStream src) {
-        synchronized (clients) {
-            for (ObjectOutputStream oos : clients) {
-                if (oos == src) continue;
-                try {
-                    oos.writeObject(cmd);
-                    oos.flush();
-                } catch (Exception e) {
-                    // 忽略发送失败的客户端
+    public synchronized void leaveBoard(String username) throws RemoteException {
+        WhiteboardClientInterface removed = clients.remove(username);
+        if (removed != null) {
+            System.out.println(username + " 离开了白板");
+        }
+        if (username.equals(manager)) {
+            broadcastShutdown("管理员已退出，白板关闭");
+            new Timer().schedule(new TimerTask() {
+                public void run() {
+                    System.exit(0);
                 }
+            }, 500);
+        }
+        broadcastUserList();
+    }
+
+    public synchronized void sendShape(String username, WhiteboardShape shape) throws RemoteException {
+        shapes.add(shape);
+        for (Map.Entry<String, WhiteboardClientInterface> entry : clients.entrySet()) {
+            if (!entry.getKey().equals(username)) {
+                entry.getValue().receiveShape(shape);
             }
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        int port = 12345;
-        if (args.length >= 1) port = Integer.parseInt(args[0]);
-        new WhiteboardServer(port).start();
+    public synchronized void sendMessage(String username, String message) throws RemoteException {
+        String full = username + ": " + message;
+        chatHistory.add(full);
+        for (WhiteboardClientInterface client : clients.values()) {
+            client.receiveMessage(username, message);
+        }
+    }
+
+    public synchronized void kickUser(String admin, String target) throws RemoteException {
+        if (!admin.equals(manager) || !clients.containsKey(target)) return;
+        clients.get(target).serverNotification("您已被管理员移除");
+        clients.remove(target);
+        broadcastUserList();
+    }
+
+    public synchronized void closeBoard() throws RemoteException {
+        broadcastShutdown("管理员关闭了白板，所有人将退出");
+        System.exit(0);
+    }
+
+    public synchronized void loadBoard(List<WhiteboardShape> newShapes) throws RemoteException {
+        shapes = new ArrayList<>(newShapes);
+        for (WhiteboardClientInterface client : clients.values()) {
+            client.refreshCanvas(shapes);
+        }
+    }
+
+    public synchronized void clearBoard() throws RemoteException {
+        shapes.clear();
+        for (WhiteboardClientInterface client : clients.values()) {
+            client.clearCanvas();
+        }
+    }
+
+    private void broadcastShutdown(String message) {
+        for (WhiteboardClientInterface client : clients.values()) {
+            try {
+                client.serverNotification(message);
+            } catch (RemoteException ignored) {}
+        }
+    }
+
+    private void broadcastUserList() throws RemoteException {
+        List<String> users = new ArrayList<>(clients.keySet());
+        for (WhiteboardClientInterface client : clients.values()) {
+            client.updateUserList(users);
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            WhiteboardServer server = new WhiteboardServer();
+            Registry registry = LocateRegistry.createRegistry(1099);
+            registry.rebind("WhiteboardServer", server);
+            System.out.println("白板服务器已启动，端口: 1099");
+        } catch (Exception e) {
+            System.err.println("服务器启动失败: " + e.getMessage());
+        }
     }
 }

@@ -1,130 +1,101 @@
-package Client;
+package Client; /** WhiteboardClient.java — 白板客户端程序实现 */
+import GUI.*;
+import Interface.*;
+import Utility.*;
 
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
+import java.util.List;
 
-/**
- * WhiteboardClient：GUI 窗口 + 网络通信
- */
-public class WhiteboardClient extends JPanel {
-    // 网络流
-    private ObjectOutputStream oos;
-    private ObjectInputStream ois;
+public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardClientInterface {
+    private WhiteboardServerInterface server;
+    private String username;
+    private boolean isManager;
+    private WhiteboardGUI gui;
 
-    // 用于在 EDT 之外接收命令并在 EDT 中绘制
-    private BlockingQueue<DrawCommand> recvQueue = new LinkedBlockingQueue<>();
-
-    // 画布
-    private BufferedImage canvas;
-    private Point lastPoint;
-
-    // 画笔属性
-    private float strokeWidth = 2.0f;
-    private Color penColor = Color.BLACK;
-
-    public WhiteboardClient(String serverIp, int serverPort) throws Exception {
-        // 初始化画布
-        canvas = new BufferedImage(800, 600, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = canvas.createGraphics();
-        g.setColor(Color.WHITE);
-        g.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
-        g.dispose();
-
-        // 连接服务器
-        Socket sock = new Socket(serverIp, serverPort);
-        oos = new ObjectOutputStream(sock.getOutputStream());
-        ois = new ObjectInputStream(sock.getInputStream());
-
-        // 接收线程
-        new Thread(() -> {
-            try {
-                while (true) {
-                    Object obj = ois.readObject();
-                    if (obj instanceof DrawCommand) {
-                        recvQueue.put((DrawCommand) obj);
-                        SwingUtilities.invokeLater(this::processRecvQueue);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        // 鼠标事件：绘制并发送
-        addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                lastPoint = e.getPoint();
-            }
-        });
-        addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) {
-                Point p = e.getPoint();
-                DrawCommand cmd = new DrawCommand(lastPoint, p, strokeWidth, penColor);
-                // 本地绘制
-                Graphics2D g2 = canvas.createGraphics();
-                cmd.execute(g2);
-                g2.dispose();
-                repaint();
-                lastPoint = p;
-                // 发送给服务器
-                try {
-                    oos.writeObject(cmd);
-                    oos.flush();
-                } catch (Exception ex) { ex.printStackTrace(); }
-            }
-        });
+    public WhiteboardClient(String username) throws RemoteException {
+        super();
+        this.username = username;
     }
 
-    /** 处理并绘制从网络收到的命令 */
-    private void processRecvQueue() {
-        DrawCommand cmd;
-        while ((cmd = recvQueue.poll()) != null) {
-            Graphics2D g2 = canvas.createGraphics();
-            cmd.execute(g2);
-            g2.dispose();
+    // 启动客户端并连接服务器
+    public void start(String host, int port) throws Exception{
+        try {
+            Registry registry = LocateRegistry.getRegistry(host, port);
+            server = (WhiteboardServerInterface) registry.lookup("WhiteboardServer");
+            BoardState state = server.joinBoard(username, this);
+            this.isManager = state.isManager();
+            this.gui = new WhiteboardGUI(username, server, this, state);
+            server.sendMessage("系统", username + "加入了白板");
+        } catch (Exception e) {
+            System.err.println("连接失败: " + e.getMessage());
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "连接服务器失败: " + e.getMessage());
+            throw e;
         }
-        repaint();
+    }
+
+    // 被踢或服务器关闭后，重新进入登录界面
+    public void reconnect() {
+        try {
+            UnicastRemoteObject.unexportObject(this, true); // 断开 RMI
+        } catch (Exception ignored) {}
+        SwingUtilities.invokeLater(() -> WhiteboardLogin.showLogin());
+    }
+
+    public void shutdown() {
+        try {
+            UnicastRemoteObject.unexportObject(this, true); // 彻底解除 RMI 绑定
+        } catch (Exception ignored) {}
+    }
+
+    // 客户端主入口
+    public static void main(String[] args) {
+        WhiteboardLogin.showLogin(); // 显示登录界面（需另写 WhiteboardLogin.java）
+    }
+
+    // ====== RMI 接口实现：被服务器远程调用 ======
+
+    @Override
+    public void receiveShape(WhiteboardShape shape) throws RemoteException {
+        gui.addShape(shape);
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        g.drawImage(canvas,0,0,null);
+    public void refreshCanvas(List<WhiteboardShape> shapes) throws RemoteException {
+        gui.setShapes(shapes);
     }
 
-    /** 创建并显示窗口 */
-    private void createAndShowGUI() {
-        JFrame frame = new JFrame("Distributed Whiteboard");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(this);
-        // 简单的颜色选择按钮
-        JPanel top = new JPanel();
-        JButton black = new JButton("Black");
-        black.addActionListener(e -> penColor = Color.BLACK);
-        JButton red = new JButton("Red");
-        red.addActionListener(e -> penColor = Color.RED);
-        top.add(black); top.add(red);
-        frame.add(top, BorderLayout.NORTH);
-
-        frame.setSize(800,600);
-        frame.setVisible(true);
+    @Override
+    public void receiveMessage(String from, String msg) throws RemoteException {
+        gui.appendChat(from + ": " + msg);
     }
 
-    public static void main(String[] args) throws Exception {
-        if (args.length < 2) {
-            System.out.println("Usage: java WhiteboardClient <serverIp> <serverPort>");
-            System.exit(1);
-        }
-        String serverIp = args[0];
-        int serverPort = Integer.parseInt(args[1]);
-        WhiteboardClient panel = new WhiteboardClient(serverIp, serverPort);
-        SwingUtilities.invokeLater(panel::createAndShowGUI);
+    @Override
+    public void updateUserList(List<String> users) throws RemoteException {
+        gui.setUserList(users);
+    }
+
+    @Override
+    public void serverNotification(String msg) throws RemoteException {
+        gui.showMessageAndReturnToLogin(msg);
+    }
+
+    @Override
+    public boolean confirmJoinRequest(String username) throws RemoteException {
+        return gui.confirmJoin(username);
+    }
+
+    @Override
+    public void refreshChatHistory(List<String> history) throws RemoteException {
+        gui.loadChatHistory(history);
+    }
+
+    @Override
+    public void clearCanvas() throws RemoteException {
+        gui.clearCanvas();
     }
 }
