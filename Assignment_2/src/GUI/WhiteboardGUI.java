@@ -91,7 +91,6 @@ public class WhiteboardGUI {
 
         // 聊天区域
         chatArea = new JTextArea();
-        chatArea.setEditable(false);
         JScrollPane chatScroll = new JScrollPane(chatArea);
         inputField = new JTextField();
         JButton sendBtn = new JButton("发送");
@@ -304,10 +303,15 @@ public class WhiteboardGUI {
 
     public void appendChat(String msg) {
         chatArea.append(msg + "\n");
+        chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
     public void loadChatHistory(List<String> history) {
-        chatArea.setText(String.join("\n", history) + "\n");
+        chatArea.setText("");
+        for (String s : history) {
+            chatArea.append(s + "\n");
+        }
+        chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
     public boolean confirmJoin(String username) {

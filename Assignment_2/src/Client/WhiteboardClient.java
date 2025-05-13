@@ -29,7 +29,8 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
             BoardState state = server.joinBoard(username, this);
             this.isManager = state.isManager();
             this.gui = new WhiteboardGUI(username, server, this, state);
-            server.sendMessage("系统", username + "加入了白板");
+            gui.loadChatHistory(state.getChatMessages());
+            server.notifyUserJoined(username);
         } catch (Exception e) {
             System.err.println("连接失败: " + e.getMessage());
             e.printStackTrace();

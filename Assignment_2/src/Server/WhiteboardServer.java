@@ -101,6 +101,12 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
         }
     }
 
+    @Override
+    public void notifyUserJoined(String username) throws RemoteException {
+        broadcastUserList();
+        sendMessage("系统", username + " 加入了白板！");
+    }
+
     private void broadcastShutdown(String message) {
         for (WhiteboardClientInterface client : clients.values()) {
             try {

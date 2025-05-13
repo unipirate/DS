@@ -14,4 +14,5 @@ public interface WhiteboardServerInterface extends Remote {
     void closeBoard() throws RemoteException;
     void loadBoard(List<WhiteboardShape> shapes) throws RemoteException;
     void clearBoard() throws RemoteException;
+    void notifyUserJoined(String username) throws RemoteException;
 }
