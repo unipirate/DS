@@ -12,6 +12,5 @@ public interface WhiteboardClientInterface extends Remote {
     void updateUserList(List<String> userList) throws RemoteException;
     void serverNotification(String message) throws RemoteException;
     boolean confirmJoinRequest(String username) throws RemoteException;
-    void refreshChatHistory(List<String> messages) throws RemoteException;
     void clearCanvas() throws RemoteException;
 }

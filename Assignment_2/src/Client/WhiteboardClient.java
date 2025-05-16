@@ -90,11 +90,6 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
     }
 
     @Override
-    public void refreshChatHistory(List<String> history) throws RemoteException {
-        gui.loadChatHistory(history);
-    }
-
-    @Override
     public void clearCanvas() throws RemoteException {
         gui.clearCanvas();
     }
