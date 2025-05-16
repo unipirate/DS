@@ -34,7 +34,6 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
             server.notifyUserJoined(username);
         } catch (Exception e) {
             System.err.println("Connection fail: " + e.getMessage());
-            e.printStackTrace();
             System.exit(1);
         }
     }
