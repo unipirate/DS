@@ -4,7 +4,7 @@ import Client.WhiteboardClient;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
 
 public class WhiteboardLogin {
@@ -19,15 +19,19 @@ public class WhiteboardLogin {
         JTextField portField = new JTextField("1099");
         JTextField nameField = new JTextField();
 
+        JButton createBtn = new JButton("Create Whiteboard(Manager)");
+        JButton joinBtn = new JButton("Join Whiteboard(Manager)");
+
         frame.add(new JLabel("Server IP:"));
         frame.add(ipField);
         frame.add(new JLabel("Port:"));
         frame.add(portField);
         frame.add(new JLabel("Username:"));
         frame.add(nameField);
+        frame.add(createBtn);
+        frame.add(joinBtn);
 
-        JButton connectBtn = new JButton("Connect");
-        connectBtn.addActionListener((ActionEvent e) -> {
+        ActionListener connectAction = e -> {
             String ip = ipField.getText().trim();
             int port;
             try {
@@ -42,8 +46,10 @@ public class WhiteboardLogin {
                 return;
             }
 
+            boolean isCreator = (e.getSource() == createBtn);
+
             try {
-                WhiteboardClient client = new WhiteboardClient(username);
+                WhiteboardClient client = new WhiteboardClient(username, isCreator);
                 client.start(ip, port);
                 frame.dispose();  // 连接成功后关闭登录窗口
             } catch (RemoteException ex) {
@@ -51,9 +57,10 @@ public class WhiteboardLogin {
             } catch (Exception ex){
                 JOptionPane.showMessageDialog(frame, "Server connection fail" + ex.getMessage());
             }
-        });
+        };
 
-        frame.add(connectBtn);
+        createBtn.addActionListener(connectAction);
+        joinBtn.addActionListener(connectAction);
         frame.setVisible(true);
     }
 }

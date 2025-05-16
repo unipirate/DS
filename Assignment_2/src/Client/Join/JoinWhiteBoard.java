@@ -14,7 +14,7 @@ public class JoinWhiteBoard {
         String username = args[2];
 
         try {
-            WhiteboardClient client = new WhiteboardClient(username);
+            WhiteboardClient client = new WhiteboardClient(username, false);
             client.start(ip, port);
         } catch (Exception e) {
             System.err.println("连接失败: " + e.getMessage());

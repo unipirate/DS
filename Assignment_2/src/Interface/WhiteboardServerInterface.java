@@ -6,7 +6,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface WhiteboardServerInterface extends Remote {
-    BoardState joinBoard(String username, WhiteboardClientInterface client) throws RemoteException, Exception;
+    BoardState joinBoard(String username, WhiteboardClientInterface client, boolean isCreator) throws RemoteException, Exception;
     void leaveBoard(String username) throws RemoteException;
     void sendShape(String username, WhiteboardShape shape) throws RemoteException;
     void sendMessage(String username, String message) throws RemoteException;

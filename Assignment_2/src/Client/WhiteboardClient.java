@@ -15,8 +15,9 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
     private String username;
     private boolean isManager;
     private WhiteboardGUI gui;
+    private boolean isCreator;
 
-    public WhiteboardClient(String username) throws RemoteException {
+    public WhiteboardClient(String username, boolean isCreator) throws RemoteException {
         super();
         this.username = username;
     }
@@ -26,7 +27,7 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
         try {
             Registry registry = LocateRegistry.getRegistry(host, port);
             server = (WhiteboardServerInterface) registry.lookup("WhiteboardServer");
-            BoardState state = server.joinBoard(username, this);
+            BoardState state = server.joinBoard(username, this, isCreator);
             this.isManager = state.isManager();
             this.gui = new WhiteboardGUI(username, server, this, state);
             gui.loadChatHistory(state.getChatMessages());
@@ -34,8 +35,7 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
         } catch (Exception e) {
             System.err.println("Connection fail: " + e.getMessage());
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Server connection fail: " + e.getMessage());
-            throw e;
+            System.exit(1);
         }
     }
 

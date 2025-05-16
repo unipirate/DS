@@ -22,10 +22,14 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
         manager = null;
     }
 
-    public synchronized BoardState joinBoard(String username, WhiteboardClientInterface client)
+    public synchronized BoardState joinBoard(String username, WhiteboardClientInterface client, boolean isCreator)
             throws Exception {
         if (clients.containsKey(username)) {
             throw new Exception("Name in Whiteboard already exists");
+        }
+
+        if ( manager != null && isCreator) {
+            throw new Exception("Manager already exists");
         }
 
         boolean isAdmin = false;

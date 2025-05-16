@@ -14,7 +14,7 @@ public class CreateWhiteBoard {
         String username = args[2];
 
         try {
-            WhiteboardClient client = new WhiteboardClient(username);
+            WhiteboardClient client = new WhiteboardClient(username, true);
             client.start(ip, port);
         } catch (Exception e) {
             System.err.println("Fail to start the server: " + e.getMessage());
