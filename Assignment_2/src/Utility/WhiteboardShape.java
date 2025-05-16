@@ -1,4 +1,4 @@
-package Utility; /** WhiteboardShape.java — 白板图形对象数据结构 */
+package Utility;
 import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayList;

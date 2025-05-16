@@ -1,6 +1,5 @@
 package GUI;
 
-// ✅ WhiteboardGUI.java
 import Client.*;
 import Interface.*;
 import Utility.*;
@@ -42,21 +41,19 @@ public class WhiteboardGUI {
         initUI(state.getUsers());
     }
     private void initUI(List<String> users) {
-        frame = new JFrame("共享白板 - " + username + (isManager ? "（管理员）" : ""));
+        frame = new JFrame("Shared Whiteboard - " + username + (isManager ? "（Manager）" : ""));
         frame.setSize(1000, 700);
         frame.setLayout(new BorderLayout());
 
-        // 关闭窗口处理
-        // 设置关闭操作：弹窗提示是否退出
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                // 用 SwingUtilities 确保对话框在 GUI 线程运行，避免卡顿或空白
+
                 SwingUtilities.invokeLater(() -> {
                     int res = JOptionPane.showConfirmDialog(
                             frame,
-                            "确认退出？",
-                            "退出提示",
+                            "Confirm to Exit?",
+                            "Exit Whiteboard",
                             JOptionPane.YES_NO_OPTION
                     );
                     if (res == JOptionPane.YES_OPTION) {
@@ -93,7 +90,7 @@ public class WhiteboardGUI {
         chatArea = new JTextArea();
         JScrollPane chatScroll = new JScrollPane(chatArea);
         inputField = new JTextField();
-        JButton sendBtn = new JButton("发送");
+        JButton sendBtn = new JButton("send");
         sendBtn.addActionListener(e -> sendChat());
 
         JPanel chatPanel = new JPanel(new BorderLayout());
@@ -118,17 +115,17 @@ public class WhiteboardGUI {
             leftPanel.add(btn);
         }
 
-        penSizeCombo = new JComboBox<>(new String[]{"细", "中", "粗"});
+        penSizeCombo = new JComboBox<>(new String[]{"1", "2", "3"});
         penSizeCombo.addActionListener(e -> currentStroke = penSizeCombo.getSelectedIndex() * 2 + 1);
         penSizeCombo.setSelectedIndex(1);
 
-        eraserSizeCombo = new JComboBox<>(new String[]{"细", "中", "粗"});
+        eraserSizeCombo = new JComboBox<>(new String[]{"1", "2", "3"});
         eraserSizeCombo.addActionListener(e -> currentStroke = eraserSizeCombo.getSelectedIndex() * 4 + 4);
         eraserSizeCombo.setSelectedIndex(1);
 
-        leftPanel.add(new JLabel("画笔粗细"));
+        leftPanel.add(new JLabel("Brush Size:"));
         leftPanel.add(penSizeCombo);
-        leftPanel.add(new JLabel("橡皮粗细"));
+        leftPanel.add(new JLabel("Rubber Sizes:"));
         leftPanel.add(eraserSizeCombo);
 
         JPanel colorPanel = new JPanel(new GridLayout(2, 8, 2, 2));
@@ -136,23 +133,23 @@ public class WhiteboardGUI {
                 Color.BLACK, Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW,
                 Color.ORANGE, Color.MAGENTA, Color.CYAN, Color.GRAY, Color.PINK,
                 Color.DARK_GRAY, Color.LIGHT_GRAY, Color.WHITE,
-                new Color(128, 0, 128), // 紫色
-                new Color(0, 128, 128), // 青绿色
-                new Color(139, 69, 19)  // 棕色
+                new Color(128, 0, 128),
+                new Color(0, 128, 128),
+                new Color(139, 69, 19)
         };
 
         for (Color c : colors) {
             JButton b = new JButton();
             b.setBackground(c);
-            b.setOpaque(true); // ✅ 显示背景色
-            b.setContentAreaFilled(true); // ✅ 填充按钮背景
-            b.setBorderPainted(false); // ✅ 移除边框（更像色块）
+            b.setOpaque(true);
+            b.setContentAreaFilled(true);
+            b.setBorderPainted(false);
             b.setPreferredSize(new Dimension(24, 24));
             b.addActionListener(e -> currentColor = c);
             colorPanel.add(b);
         }
 
-        leftPanel.add(new JLabel("颜色选择"));
+        leftPanel.add(new JLabel("Chosen Color:"));
         leftPanel.add(colorPanel);
 
 
@@ -166,7 +163,7 @@ public class WhiteboardGUI {
         frame.add(userScroll, BorderLayout.EAST);
 
         if (isManager) {
-            JButton kickBtn = new JButton("踢出选中用户");
+            JButton kickBtn = new JButton("Kick selected the user");
             kickBtn.addActionListener(e -> {
                 String selected = userList.getSelectedValue();
                 if (selected != null && !selected.equals(username)) {
@@ -178,14 +175,14 @@ public class WhiteboardGUI {
             leftPanel.add(kickBtn);
         }
 
-        // 菜单栏
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("文件");
 
-        JMenuItem newBoard = new JMenuItem("新建");
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+
+        JMenuItem newBoard = new JMenuItem("New Board");
         newBoard.addActionListener(e -> {
             if (!isManager) return;
-            int res = JOptionPane.showConfirmDialog(frame, "是否清空白板？", "新建白板", JOptionPane.YES_NO_OPTION);
+            int res = JOptionPane.showConfirmDialog(frame, "Confirm to clean the whiteboard？", "New Whiteboard", JOptionPane.YES_NO_OPTION);
             if (res == JOptionPane.YES_OPTION) {
                 try {
                     server.clearBoard();
@@ -196,66 +193,66 @@ public class WhiteboardGUI {
             }
         });
 
-        JMenuItem saveItem = new JMenuItem("保存");
+        JMenuItem saveItem = new JMenuItem("Save");
         saveItem.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("保存白板到XML");
-            // 可以设置默认文件名或文件过滤器
+            fileChooser.setDialogTitle("Save to XML");
+
              fileChooser.setSelectedFile(new File("whiteboard.xml"));
-             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XML 文件 (*.xml)", "xml"));
+             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XML file (*.xml)", "xml"));
 
             int userSelection = fileChooser.showSaveDialog(frame); // 使用 frame 作为父组件
 
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
-                // 确保文件名以 .xml 结尾 (可选)
+
                 if (!fileToSave.getAbsolutePath().endsWith(".xml")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xml");
                 }
                 try {
-                    // 现在传入正确的 File 对象
+
                     WhiteboardXMLUtils.saveToXML(shapeList, fileToSave);
-                    isDirty = false; // 保存后标记为未修改状态
-                    JOptionPane.showMessageDialog(frame, "白板已保存到 " + fileToSave.getName());
+                    isDirty = false;
+                    JOptionPane.showMessageDialog(frame, "Whiteboard has saved " + fileToSave.getName());
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(frame, "保存失败: " + ex.getMessage(), "保存错误", JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace(); // 打印错误信息到控制台便于调试
+                    JOptionPane.showMessageDialog(frame, "Fail to save: " + ex.getMessage(), "Error Saving", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
                 }
             }
         });
 
-        JMenuItem openItem = new JMenuItem("打开");
+        JMenuItem openItem = new JMenuItem("Open");
         openItem.addActionListener(e -> {
-            // （可选）如果当前有未保存的更改，提示用户
+
             if (isDirty) {
-                int res = JOptionPane.showConfirmDialog(frame, "当前白板有未保存的更改，继续打开将丢失这些更改。\n是否继续？", "打开白板", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                int res = JOptionPane.showConfirmDialog(frame, "There are unsaved changes on the current whiteboard. Continuing to open it will result in the loss of these changes.\nContinue？", "Open Whiteboard", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
                 if (res != JOptionPane.YES_OPTION) {
-                    return; // 用户取消打开
+                    return;
                 }
             }
 
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("打开XML白板文件");
-            // 可以设置文件过滤器
-             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XML 文件 (*.xml)", "xml"));
+            fileChooser.setDialogTitle("Open XML file");
 
-            int userSelection = fileChooser.showOpenDialog(frame); // 使用 frame 作为父组件
+             fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("XML file (*.xml)", "xml"));
+
+            int userSelection = fileChooser.showOpenDialog(frame);
 
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToOpen = fileChooser.getSelectedFile();
                 try {
-                    // 现在传入正确的 File 对象
+
                     List<WhiteboardShape> loadedShapes = WhiteboardXMLUtils.loadFromXML(fileToOpen);
                     if (loadedShapes != null) {
-                        // 将加载的图形列表发送给服务器进行同步
+
                         server.loadBoard(loadedShapes);
-                        // 服务器会通过 refreshCanvas 回调来更新所有客户端（包括自己）的画板
-                        isDirty = false; // 加载后标记为未修改状态
-                        JOptionPane.showMessageDialog(frame, "白板已从 " + fileToOpen.getName() + " 加载");
+
+                        isDirty = false;
+                        JOptionPane.showMessageDialog(frame, "Whiteboard has loaded from " + fileToOpen.getName());
                     }
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(frame, "打开文件失败: " + ex.getMessage(), "打开错误", JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace(); // 打印错误信息到控制台便于调试
+                    JOptionPane.showMessageDialog(frame, "Fail to Open file: " + ex.getMessage());
+                    ex.printStackTrace();
                 }
             }
         });
@@ -283,7 +280,6 @@ public class WhiteboardGUI {
         eraserSizeCombo.setEnabled(currentTool.equals("eraser"));
     }
 
-    // GUI 接口供 WhiteboardClient 回调
     public void addShape(WhiteboardShape s) {
         shapeList.add(s);
         canvas.repaint();
@@ -315,7 +311,7 @@ public class WhiteboardGUI {
     }
 
     public boolean confirmJoin(String username) {
-        int res = JOptionPane.showConfirmDialog(frame, username + " 请求加入，是否允许？", "加入请求", JOptionPane.YES_NO_OPTION);
+        int res = JOptionPane.showConfirmDialog(frame, username + " Require to entry", "Join request", JOptionPane.YES_NO_OPTION);
         return res == JOptionPane.YES_OPTION;
     }
 
@@ -326,7 +322,7 @@ public class WhiteboardGUI {
                 frame.dispose();
             }
             try {
-                client.shutdown(); // ✅ 通知 RMI 注销远程对象（需要你已实现）
+                client.shutdown();
             } catch (Exception ignored) {}
 
              client.reconnect();
@@ -343,7 +339,6 @@ public class WhiteboardGUI {
         frame.dispose();
     }
 
-    // 内部类：绘图面板
     class DrawingCanvas extends JPanel {
         private Point start = null;
         private List<Point> currentFreePoints = new ArrayList<>();
@@ -361,7 +356,7 @@ public class WhiteboardGUI {
                         currentFreePoints = new ArrayList<>();
                         currentFreePoints.add(start);
                     } else if (currentTool.equals("text")) {
-                        String input = JOptionPane.showInputDialog("请输入文本:");
+                        String input = JOptionPane.showInputDialog("Please enter a text to display:");
                         if (input != null) {
                             List<Point> pts = List.of(start);
                             WhiteboardShape s = new WhiteboardShape("text", pts, currentColor, 1, input);
@@ -469,7 +464,7 @@ public class WhiteboardGUI {
                 }
             }
 
-            // 实时绘制当前自由线条路径
+
             if ((currentTool.equals("free") || currentTool.equals("eraser")) && !currentFreePoints.isEmpty()) {
                 g2.setColor(currentTool.equals("eraser") ? Color.WHITE : currentColor);
                 g2.setStroke(new BasicStroke(currentStroke));
@@ -480,7 +475,7 @@ public class WhiteboardGUI {
                 }
             }
 
-            // 添加在绘制完已有图形后：
+
 
             if (start != null && currentDragPoint != null) {
                 g2.setColor(currentColor);

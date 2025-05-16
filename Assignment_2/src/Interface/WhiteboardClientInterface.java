@@ -1,5 +1,4 @@
 package Interface;
-/** WhiteboardClientInterface.java — 白板客户端远程接口（回调）定义 */
 import Utility.WhiteboardShape;
 
 import java.rmi.Remote;

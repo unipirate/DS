@@ -9,7 +9,7 @@ import java.rmi.RemoteException;
 
 public class WhiteboardLogin {
     public static void showLogin() {
-        JFrame frame = new JFrame("连接共享白板");
+        JFrame frame = new JFrame("Connect to Whiteboard");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(300, 200);
         frame.setLocationRelativeTo(null);
@@ -19,26 +19,26 @@ public class WhiteboardLogin {
         JTextField portField = new JTextField("1099");
         JTextField nameField = new JTextField();
 
-        frame.add(new JLabel("服务器 IP:"));
+        frame.add(new JLabel("Server IP:"));
         frame.add(ipField);
-        frame.add(new JLabel("端口:"));
+        frame.add(new JLabel("Port:"));
         frame.add(portField);
-        frame.add(new JLabel("用户名:"));
+        frame.add(new JLabel("Username:"));
         frame.add(nameField);
 
-        JButton connectBtn = new JButton("连接");
+        JButton connectBtn = new JButton("Connect");
         connectBtn.addActionListener((ActionEvent e) -> {
             String ip = ipField.getText().trim();
             int port;
             try {
                 port = Integer.parseInt(portField.getText().trim());
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(frame, "端口必须是数字");
+                JOptionPane.showMessageDialog(frame, "Port has to be numeric");
                 return;
             }
             String username = nameField.getText().trim();
             if (username.isEmpty()) {
-                JOptionPane.showMessageDialog(frame, "用户名不能为空");
+                JOptionPane.showMessageDialog(frame, "Username is empty!");
                 return;
             }
 
@@ -47,9 +47,9 @@ public class WhiteboardLogin {
                 client.start(ip, port);
                 frame.dispose();  // 连接成功后关闭登录窗口
             } catch (RemoteException ex) {
-                JOptionPane.showMessageDialog(frame, "启动客户端失败：" + ex.getMessage());
+                JOptionPane.showMessageDialog(frame, "Client starting fail：" + ex.getMessage());
             } catch (Exception ex){
-                JOptionPane.showMessageDialog(frame, "连接服务器失败" + ex.getMessage());
+                JOptionPane.showMessageDialog(frame, "Server connection fail" + ex.getMessage());
             }
         });
 

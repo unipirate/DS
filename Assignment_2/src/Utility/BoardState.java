@@ -1,4 +1,4 @@
-package Utility; /** BoardState.java — 白板当前状态数据结构 */
+package Utility;
 import java.io.Serializable;
 import java.util.List;
 

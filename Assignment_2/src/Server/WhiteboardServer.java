@@ -1,9 +1,8 @@
-package Server; /** WhiteboardServer.java — 白板服务器程序实现 */
+package Server;
 import Interface.*;
 import Utility.*;
 
 
-// ✅ WhiteboardServer.java
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -26,7 +25,7 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
     public synchronized BoardState joinBoard(String username, WhiteboardClientInterface client)
             throws Exception {
         if (clients.containsKey(username)) {
-            throw new Exception("用户名已存在");
+            throw new Exception("Name in Whiteboard already exists");
         }
 
         boolean isAdmin = false;
@@ -35,7 +34,7 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
             isAdmin = true;
         } else {
             boolean accepted = clients.get(manager).confirmJoinRequest(username);
-            if (!accepted) throw new Exception("管理员拒绝了加入请求");
+            if (!accepted) throw new Exception("Manager has rejected join request");
         }
 
         clients.put(username, client);
@@ -45,10 +44,10 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
     public synchronized void leaveBoard(String username) throws RemoteException {
         WhiteboardClientInterface removed = clients.remove(username);
         if (removed != null) {
-            System.out.println(username + " 离开了白板");
+            System.out.println(username + " left the whiteboard");
         }
         if (username.equals(manager)) {
-            broadcastShutdown("管理员已退出，白板关闭");
+            broadcastShutdown("Manager has left the whiteboard, whiteboard has been removed");
             new Timer().schedule(new TimerTask() {
                 public void run() {
                     System.exit(0);
@@ -77,13 +76,13 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
 
     public synchronized void kickUser(String admin, String target) throws RemoteException {
         if (!admin.equals(manager) || !clients.containsKey(target)) return;
-        clients.get(target).serverNotification("您已被管理员移除");
+        clients.get(target).serverNotification("You are now kicked from the whiteboard");
         clients.remove(target);
         broadcastUserList();
     }
 
     public synchronized void closeBoard() throws RemoteException {
-        broadcastShutdown("管理员关闭了白板，所有人将退出");
+        broadcastShutdown("Manager has been closed, whiteboard has been removed");
         System.exit(0);
     }
 
@@ -104,7 +103,7 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
     @Override
     public void notifyUserJoined(String username) throws RemoteException {
         broadcastUserList();
-        sendMessage("系统", username + " 加入了白板！");
+        sendMessage("System ", username + " has joined the whiteboard!");
     }
 
     private void broadcastShutdown(String message) {
@@ -127,9 +126,9 @@ public class WhiteboardServer extends UnicastRemoteObject implements WhiteboardS
             WhiteboardServer server = new WhiteboardServer();
             Registry registry = LocateRegistry.createRegistry(1099);
             registry.rebind("WhiteboardServer", server);
-            System.out.println("白板服务器已启动，端口: 1099");
+            System.out.println("Whiteboard Server Started，port: 1099");
         } catch (Exception e) {
-            System.err.println("服务器启动失败: " + e.getMessage());
+            System.err.println("Server start failed: " + e.getMessage());
         }
     }
 }

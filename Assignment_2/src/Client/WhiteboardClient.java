@@ -1,4 +1,4 @@
-package Client; /** WhiteboardClient.java — 白板客户端程序实现 */
+package Client;
 import GUI.*;
 import Interface.*;
 import Utility.*;
@@ -21,7 +21,7 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
         this.username = username;
     }
 
-    // 启动客户端并连接服务器
+
     public void start(String host, int port) throws Exception{
         try {
             Registry registry = LocateRegistry.getRegistry(host, port);
@@ -32,33 +32,32 @@ public class WhiteboardClient extends UnicastRemoteObject implements WhiteboardC
             gui.loadChatHistory(state.getChatMessages());
             server.notifyUserJoined(username);
         } catch (Exception e) {
-            System.err.println("连接失败: " + e.getMessage());
+            System.err.println("Connection fail: " + e.getMessage());
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "连接服务器失败: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, "Server connection fail: " + e.getMessage());
             throw e;
         }
     }
 
-    // 被踢或服务器关闭后，重新进入登录界面
+
     public void reconnect() {
         try {
-            UnicastRemoteObject.unexportObject(this, true); // 断开 RMI
+            UnicastRemoteObject.unexportObject(this, true);
         } catch (Exception ignored) {}
         SwingUtilities.invokeLater(() -> WhiteboardLogin.showLogin());
     }
 
     public void shutdown() {
         try {
-            UnicastRemoteObject.unexportObject(this, true); // 彻底解除 RMI 绑定
+            UnicastRemoteObject.unexportObject(this, true);
         } catch (Exception ignored) {}
     }
 
-    // 客户端主入口
+
     public static void main(String[] args) {
-        WhiteboardLogin.showLogin(); // 显示登录界面（需另写 WhiteboardLogin.java）
+        WhiteboardLogin.showLogin();
     }
 
-    // ====== RMI 接口实现：被服务器远程调用 ======
 
     @Override
     public void receiveShape(WhiteboardShape shape) throws RemoteException {

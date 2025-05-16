@@ -1,4 +1,4 @@
-package Interface; /** WhiteboardServerInterface.java — 白板服务器远程接口定义 */
+package Interface;
 import Utility.*;
 
 import java.rmi.Remote;
