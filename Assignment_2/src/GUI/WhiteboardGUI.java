@@ -261,7 +261,9 @@ public class WhiteboardGUI {
         fileMenu.add(saveItem);
         fileMenu.add(openItem);
         menuBar.add(fileMenu);
-        frame.setJMenuBar(menuBar);
+        if (isManager) {
+            frame.setJMenuBar(menuBar);
+        }
 
         frame.setVisible(true);
     }
