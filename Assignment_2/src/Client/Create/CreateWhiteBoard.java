@@ -1,3 +1,5 @@
+//Author: FuQuan Gao
+//Student ID: 1648979
 package Client.Create;
 
 import Client.WhiteboardClient;
